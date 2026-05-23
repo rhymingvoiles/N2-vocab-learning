@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 N2 Vocab Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fef8f5;
+  --card: #ffffff;
+  --text: #3d2545;
+  --text-light: #9585a8;
+  --pink: #ff85a2;
+  --purple: #b07fe8;
+  --mint: #6dcab5;
+  --peach: #ffb17a;
+  --sky: #7ec8e3;
+  --yellow: #ffd166;
+  --shadow: rgba(160, 100, 200, 0.14);
+  --shadow-strong: rgba(160, 100, 200, 0.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #fdf5ff;
+  background-image:
+    radial-gradient(ellipse at 10% 10%, rgba(255,133,162,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 90%, rgba(126,200,227,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(176,127,232,0.08) 0%, transparent 70%);
+  min-height: 100vh;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── PETALS ─────────────────── */
+.petal { position:fixed; pointer-events:none; z-index:0; font-size:1.1rem; opacity:0; animation: petaldrift linear infinite; }
+@keyframes petaldrift {
+  0%   { transform: translateY(-30px) translateX(0) rotate(0deg); opacity:0; }
+  8%   { opacity: 0.35; }
+  92%  { opacity: 0.35; }
+  100% { transform: translateY(105vh) translateX(40px) rotate(540deg); opacity:0; }
+}
+
+/* ── SCREENS ────────────────── */
+.screen { display:none; min-height:100vh; padding:20px 16px 40px; position:relative; z-index:1; flex-direction:column; align-items:center; }
+.screen.active { display:flex; }
+
+/* ── HOME SCREEN ────────────── */
+.home-header { text-align:center; padding-top:24px; margin-bottom:28px; }
+.home-header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff85a2 0%, #b07fe8 50%, #7ec8e3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+.home-header .subtitle {
+  color: var(--text-light);
+  font-size: 0.88rem;
+  margin-top: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Stats pills */
+.stats-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:24px; }
+.stat-pill {
+  background: white;
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 2px 14px var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.stat-pill .snum { font-size: 1.15rem; font-weight: 900; color: var(--purple); }
+.stat-pill.due .snum { color: var(--pink); }
+.stat-pill.mastered .snum { color: var(--mint); }
+
+/* Mode selector */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-light);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  align-self: flex-start;
+  width: 100%;
+  max-width: 720px;
+}
+.mode-row { display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap; justify-content:center; }
+.mode-chip {
+  padding: 9px 18px;
+  border-radius: 50px;
+  border: 2.5px solid transparent;
+  background: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px var(--shadow);
+}
+.mode-chip:hover { color: var(--purple); border-color: var(--purple); }
+.mode-chip.active { background: linear-gradient(135deg,#ff85a2,#b07fe8); color:white; border-color:transparent; box-shadow: 0 4px 18px rgba(176,127,232,0.4); }
+
+/* Category grid */
+.cat-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(148px,1fr)); gap:11px; width:100%; max-width:740px; margin-bottom:24px; }
+.cat-card {
+  background: white;
+  border-radius: 20px;
+  padding: 18px 12px 15px;
+  cursor: pointer;
+  box-shadow: 0 3px 18px var(--shadow);
+  transition: transform 0.18s, box-shadow 0.18s;
+  border: 2.5px solid transparent;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.cat-card::after { content:''; position:absolute; top:0;left:0;right:0; height:4px; background:var(--cc); border-radius:20px 20px 0 0; }
+.cat-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px var(--shadow-strong); }
+.cat-card.selected { border-color: var(--cc); }
+.cat-card.selected .cat-check { opacity:1; }
+.cat-emoji { font-size:2rem; display:block; margin-bottom:7px; }
+.cat-name { font-weight:800; font-size:0.83rem; color:var(--text); line-height:1.3; }
+.cat-count { font-size:0.72rem; color:var(--text-light); margin-top:3px; font-weight:600; }
+.cat-due-badge {
+  position:absolute; top:9px; right:9px;
+  background:var(--cc); color:white;
+  border-radius:50%; width:22px; height:22px;
+  font-size:0.65rem; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+.cat-due-badge.hidden { display:none; }
+.cat-check {
+  position:absolute; top:9px; left:9px;
+  color:var(--cc); font-size:0.8rem;
+  opacity:0; transition:opacity 0.2s;
+}
+
+/* Start button */
+.start-area { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
+.btn-start {
+  padding: 15px 38px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(135deg, #ff85a2, #b07fe8);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(176,127,232,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display:flex; align-items:center; gap:9px;
+}
+.btn-start:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(176,127,232,0.5); }
+.btn-start:active { transform:scale(0.97); }
+.btn-ghost {
+  padding: 14px 28px;
+  border-radius: 50px;
+  border: 2.5px solid rgba(176,127,232,0.3);
+  background: white;
+  color: var(--text-light);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display:flex; align-items:center; gap:8px;
+}
+.btn-ghost:hover { border-color:var(--purple); color:var(--purple); }
+
+/* ── STUDY SCREEN ───────────── */
+.study-topbar {
+  width:100%; max-width:560px;
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.study-back-btn {
+  background:white; border:none; border-radius:50%;
+  width:38px; height:38px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 12px var(--shadow);
+  font-size:1rem; color:var(--text-light);
+  transition:all 0.15s;
+}
+.study-back-btn:hover { color:var(--purple); box-shadow:0 4px 18px var(--shadow-strong); }
+.study-progress-text { font-size:0.82rem; font-weight:700; color:var(--text-light); }
+.study-mode-label {
+  font-size:0.72rem; font-weight:800; color:var(--purple);
+  background:rgba(176,127,232,0.12); padding:4px 11px; border-radius:50px;
+}
+
+.progress-bar { width:100%; max-width:560px; height:7px; background:rgba(176,127,232,0.12); border-radius:10px; margin-bottom:22px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#ff85a2,#b07fe8,#7ec8e3); border-radius:10px; transition:width 0.4s ease; }
+
+/* Flashcard */
+.card-scene { width:100%; max-width:540px; height:290px; perspective:1200px; margin-bottom:20px; cursor:pointer; }
+.card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 0.55s cubic-bezier(0.4,0,0.2,1); }
+.card-inner.flipped { transform:rotateY(180deg); }
+.card-face {
+  position:absolute; inset:0;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:26px;
+  background:white;
+  box-shadow:0 8px 40px var(--shadow-strong);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:30px;
+  overflow:hidden;
+}
+.card-face::before { content:''; position:absolute; top:0;left:0;right:0; height:5px; background:var(--cc,#b07fe8); }
+.card-back { transform:rotateY(180deg); }
+
+.card-cat-label {
+  position:absolute; top:17px; left:50%; transform:translateX(-50%);
+  font-size:0.7rem; font-weight:800; color:white;
+  background:var(--cc,#b07fe8); padding:3px 13px; border-radius:20px;
+  white-space:nowrap; letter-spacing:0.04em;
+}
+.card-hint {
+  position:absolute; bottom:17px;
+  font-size:0.72rem; color:var(--text-light); font-weight:600;
+  letter-spacing:0.05em;
+}
+.card-tap-hint { position:absolute; bottom:17px; right:20px; font-size:0.68rem; color:var(--text-light); opacity:0.6; }
+
+.card-main-jp {
+  font-family:'Noto Sans JP', sans-serif;
+  font-size: clamp(2.4rem, 8vw, 3.8rem);
+  font-weight:700;
+  color:var(--text);
+  text-align:center;
+  line-height:1.2;
+}
+.card-furi {
+  font-family:'Noto Sans JP', sans-serif;
+  font-size:1.15rem; font-weight:500;
+  color:var(--purple); text-align:center;
+  margin-top:6px;
+}
+.card-main-en {
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  font-weight:800; color:var(--text);
+  text-align:center; line-height:1.3;
+}
+.card-sub-line {
+  font-family:'Noto Sans JP', sans-serif;
+  font-size:0.88rem; color:var(--text-light);
+  margin-top:10px; text-align:center;
+}
+.card-back-furi {
+  font-family:'Noto Sans JP', sans-serif;
+  font-size:1.5rem; font-weight:500;
+  color:var(--purple); text-align:center;
+  margin-bottom:4px;
+}
+.card-back-kanji {
+  font-family:'Noto Sans JP', sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  font-weight:700; color:var(--text);
+  text-align:center;
+}
+.card-back-en {
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  font-weight:800; color:var(--text);
+  text-align:center; margin-bottom:4px;
+}
+
+/* Reveal & rating area */
+.action-area { width:100%; max-width:540px; }
+
+.reveal-btn {
+  width:100%;
+  padding:16px;
+  border-radius:18px;
+  border:2.5px dashed rgba(176,127,232,0.28);
+  background:rgba(255,255,255,0.6);
+  font-family:'Nunito', sans-serif;
+  font-weight:700; font-size:1rem;
+  color:var(--text-light); cursor:pointer;
+  transition:all 0.2s;
+}
+.reveal-btn:hover { border-color:var(--purple); color:var(--purple); background:rgba(176,127,232,0.05); }
+
+.rating-area { display:none; flex-direction:column; align-items:center; gap:11px; }
+.rating-area.visible { display:flex; }
+.rating-label { font-size:0.72rem; font-weight:800; color:var(--text-light); letter-spacing:0.1em; text-transform:uppercase; }
+.rating-btns { display:flex; gap:9px; width:100%; }
+.rbtn {
+  flex:1; padding:13px 6px; border-radius:16px; border:none;
+  font-family:'Nunito', sans-serif; font-weight:800; font-size:0.88rem;
+  cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+}
+.rbtn:hover { transform:translateY(-2px); box-shadow:0 5px 16px rgba(0,0,0,0.12); }
+.rbtn:active { transform:scale(0.97); }
+.rbtn .rinterval { font-size:0.64rem; font-weight:600; opacity:0.65; }
+.rbtn-again { background:#ffe4e4; color:#d04040; }
+.rbtn-hard  { background:#fff3d8; color:#c07020; }
+.rbtn-good  { background:#d4f5e5; color:#28a060; }
+.rbtn-easy  { background:#deeeff; color:#2860cc; }
+
+/* ── COMPLETE SCREEN ─────────── */
+.complete-wrap { text-align:center; max-width:500px; width:100%; padding-top:40px; }
+.complete-emoji { font-size:4.5rem; margin-bottom:15px; animation:popbounce 0.5s ease-out; }
+@keyframes popbounce { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+.complete-title { font-size:2rem; font-weight:900; background:linear-gradient(135deg,#ff85a2,#b07fe8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:6px; }
+.complete-sub { color:var(--text-light); font-weight:600; margin-bottom:28px; }
+.complete-stats { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:28px; }
+.cstat { background:white; border-radius:20px; padding:18px 22px; box-shadow:0 3px 18px var(--shadow); text-align:center; min-width:90px; }
+.cstat .cn { font-size:2.2rem; font-weight:900; color:var(--purple); }
+.cstat .cl { font-size:0.75rem; color:var(--text-light); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+.cstat.cpink .cn { color:var(--pink); }
+.cstat.cmint .cn { color:var(--mint); }
+
+/* ── CONFETTI ────────────────── */
+.confetti { position:fixed; pointer-events:none; z-index:9999; font-size:1.2rem; animation:confettifall 1.8s ease-out forwards; }
+@keyframes confettifall {
+  0%   { transform:translateY(-10px) rotate(0deg) scale(1); opacity:1; }
+  100% { transform:translateY(120px) rotate(400deg) scale(0.5); opacity:0; }
+}
+
+/* ── UTILITIES ───────────────── */
+.hidden { display:none !important; }
+.flex-center { display:flex; align-items:center; justify-content:center; }
+
+/* ── RESPONSIVE ──────────────── */
+@media(max-width:480px) {
+  .card-scene { height:265px; }
+  .cat-grid { grid-template-columns: repeat(2,1fr); }
+  .rbtn { padding:12px 4px; }
+}
+
+/* ── STREAK BADGE ────────────── */
+.streak-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:linear-gradient(135deg,#ffb17a,#ff85a2);
+  color:white; border-radius:50px; padding:7px 16px;
+  font-size:0.85rem; font-weight:800;
+  box-shadow:0 3px 14px rgba(255,133,162,0.4);
+  margin-bottom:18px;
+}
+
+/* ── NO-DUE STATE ──────────── */
+.no-due-box {
+  background:white; border-radius:24px; padding:32px 28px;
+  text-align:center; box-shadow:0 4px 22px var(--shadow);
+  max-width:400px; margin-bottom:20px;
+}
+.no-due-box .ndicon { font-size:3rem; margin-bottom:12px; }
+.no-due-box h3 { font-size:1.2rem; font-weight:800; margin-bottom:8px; }
+.no-due-box p { color:var(--text-light); font-size:0.88rem; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SCREEN: HOME ══════════════ -->
+<div id="screen-home" class="screen active">
+  <header class="home-header">
+    <h1>🌸 N2 Vocab Studio</h1>
+    <p class="subtitle">Spaced Repetition · Furigana &amp; Meaning Tests</p>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-pill"><span class="snum" id="stat-total">—</span> total</div>
+    <div class="stat-pill due"><span class="snum" id="stat-due">—</span> due today</div>
+    <div class="stat-pill mastered"><span class="snum" id="stat-mastered">—</span> mastered</div>
+  </div>
+
+  <div id="streak-area"></div>
+
+  <div class="section-label" style="max-width:740px">Study Mode</div>
+  <div class="mode-row" id="mode-row">
+    <button class="mode-chip active" data-mode="reading">📖 Reading<br><small style="font-weight:600;opacity:0.8">Kanji → Furigana</small></button>
+    <button class="mode-chip" data-mode="jp_en">🇯🇵 JP → EN<br><small style="font-weight:600;opacity:0.8">Kanji+Kana → Meaning</small></button>
+    <button class="mode-chip" data-mode="en_jp">🇬🇧 EN → JP<br><small style="font-weight:600;opacity:0.8">Meaning → Japanese</small></button>
+  </div>
+
+  <div class="section-label" style="max-width:740px">Categories <span style="font-weight:600;color:var(--pink)" id="cat-sel-label"></span></div>
+  <div class="cat-grid" id="cat-grid"></div>
+
+  <div class="start-area">
+    <button class="btn-start" id="btn-start">
+      ✨ Study Due Cards
+    </button>
+    <button class="btn-ghost" id="btn-start-all">
+      🔄 Study All Selected
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: STUDY ══════════════ -->
+<div id="screen-study" class="screen">
+  <div class="study-topbar">
+    <button class="study-back-btn" id="btn-back">←</button>
+    <span class="study-progress-text" id="progress-text">Card 1 / 20</span>
+    <span class="study-mode-label" id="study-mode-label">Reading</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="card-scene" id="card-scene" onclick="cardClicked()">
+    <div class="card-inner" id="card-inner">
+      <div class="card-face card-front" id="card-front">
+        <!-- populated by JS -->
+      </div>
+      <div class="card-face card-back" id="card-back">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="action-area">
+    <button class="reveal-btn" id="reveal-btn" onclick="revealCard()">
+      👀 Reveal Answer
+    </button>
+    <div class="rating-area" id="rating-area">
+      <span class="rating-label">How well did you know it?</span>
+      <div class="rating-btns">
+        <button class="rbtn rbtn-again" onclick="rateCard(0)">
+          😵 Again<div class="rinterval" id="hint-again"></div>
+        </button>
+        <button class="rbtn rbtn-hard" onclick="rateCard(3)">
+          😓 Hard<div class="rinterval" id="hint-hard"></div>
+        </button>
+        <button class="rbtn rbtn-good" onclick="rateCard(4)">
+          😊 Good<div class="rinterval" id="hint-good"></div>
+        </button>
+        <button class="rbtn rbtn-easy" onclick="rateCard(5)">
+          🌟 Easy<div class="rinterval" id="hint-easy"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: COMPLETE ══════════════ -->
+<div id="screen-complete" class="screen">
+  <div class="complete-wrap">
+    <div class="complete-emoji" id="complete-emoji">🎉</div>
+    <h2 class="complete-title" id="complete-title">Session Complete!</h2>
+    <p class="complete-sub" id="complete-sub">Great work today!</p>
+    <div class="complete-stats" id="complete-stats"></div>
+    <div class="start-area">
+      <button class="btn-start" onclick="showHome()">🏠 Back to Home</button>
+      <button class="btn-ghost" onclick="restartSession()">🔁 Study Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  VOCABULARY DATA
+// ══════════════════════════════════════════════════════════
+const CATEGORIES = {
+  society:       { name:"Society & Work",    emoji:"🏢", color:"#ff85a2" },
+  nature:        { name:"Nature",            emoji:"🌿", color:"#6dcab5" },
+  emotion:       { name:"Emotions",          emoji:"💭", color:"#ffb17a" },
+  health:        { name:"Health",            emoji:"🏥", color:"#7ec8e3" },
+  knowledge:     { name:"Knowledge",         emoji:"📚", color:"#b07fe8" },
+  communication: { name:"Communication",     emoji:"🗣️", color:"#ff85a2" },
+  adjectives:    { name:"Adjectives",        emoji:"✨", color:"#f5a0d0" },
+  verbs:         { name:"Verbs",             emoji:"🎯", color:"#7ec8e3" },
+  adverbs:       { name:"Adverbs & Expr.",   emoji:"💫", color:"#ffd166" },
+  katakana:      { name:"Katakana",          emoji:"🌐", color:"#82c4e5" },
+};
+
+const VOCAB = [
+  // ─── SOCIETY & WORK ───────────────────────────────────
+  {id:"s01", kanji:"経済",   furigana:"けいざい",     english:"economy",               category:"society"},
+  {id:"s02", kanji:"政治",   furigana:"せいじ",       english:"politics",              category:"society"},
+  {id:"s03", kanji:"法律",   furigana:"ほうりつ",     english:"law",                   category:"society"},
+  {id:"s04", kanji:"企業",   furigana:"きぎょう",     english:"company / enterprise",  category:"society"},
+  {id:"s05", kanji:"産業",   furigana:"さんぎょう",   english:"industry",              category:"society"},
+  {id:"s06", kanji:"競争",   furigana:"きょうそう",   english:"competition",           category:"society"},
+  {id:"s07", kanji:"収入",   furigana:"しゅうにゅう", english:"income",                category:"society"},
+  {id:"s08", kanji:"税金",   furigana:"ぜいきん",     english:"tax",                   category:"society"},
+  {id:"s09", kanji:"消費",   furigana:"しょうひ",     english:"consumption",           category:"society"},
+  {id:"s10", kanji:"雇用",   furigana:"こよう",       english:"employment",            category:"society"},
+  {id:"s11", kanji:"契約",   furigana:"けいやく",     english:"contract",              category:"society"},
+  {id:"s12", kanji:"予算",   furigana:"よさん",       english:"budget",                category:"society"},
+  {id:"s13", kanji:"投資",   furigana:"とうし",       english:"investment",            category:"society"},
+  {id:"s14", kanji:"貿易",   furigana:"ぼうえき",     english:"trade",                 category:"society"},
+  {id:"s15", kanji:"規則",   furigana:"きそく",       english:"rules / regulations",   category:"society"},
+  {id:"s16", kanji:"制度",   furigana:"せいど",       english:"system / institution",  category:"society"},
+  {id:"s17", kanji:"義務",   furigana:"ぎむ",         english:"duty / obligation",     category:"society"},
+  {id:"s18", kanji:"権利",   furigana:"けんり",       english:"right / privilege",     category:"society"},
+  // ─── NATURE ───────────────────────────────────────────
+  {id:"n01", kanji:"環境",   furigana:"かんきょう",   english:"environment",           category:"nature"},
+  {id:"n02", kanji:"汚染",   furigana:"おせん",       english:"pollution",             category:"nature"},
+  {id:"n03", kanji:"資源",   furigana:"しげん",       english:"resources",             category:"nature"},
+  {id:"n04", kanji:"気候",   furigana:"きこう",       english:"climate",               category:"nature"},
+  {id:"n05", kanji:"災害",   furigana:"さいがい",     english:"disaster",              category:"nature"},
+  {id:"n06", kanji:"地震",   furigana:"じしん",       english:"earthquake",            category:"nature"},
+  {id:"n07", kanji:"台風",   furigana:"たいふう",     english:"typhoon",               category:"nature"},
+  {id:"n08", kanji:"大気",   furigana:"たいき",       english:"atmosphere / air",      category:"nature"},
+  {id:"n09", kanji:"海岸",   furigana:"かいがん",     english:"coast / seashore",      category:"nature"},
+  {id:"n10", kanji:"森林",   furigana:"しんりん",     english:"forest",                category:"nature"},
+  {id:"n11", kanji:"生態系", furigana:"せいたいけい", english:"ecosystem",             category:"nature"},
+  {id:"n12", kanji:"地域",   furigana:"ちいき",       english:"region / area",         category:"nature"},
+  // ─── EMOTIONS ─────────────────────────────────────────
+  {id:"e01", kanji:"感情",   furigana:"かんじょう",   english:"emotion / feeling",     category:"emotion"},
+  {id:"e02", kanji:"不安",   furigana:"ふあん",       english:"anxiety / unease",      category:"emotion"},
+  {id:"e03", kanji:"緊張",   furigana:"きんちょう",   english:"tension / nervousness", category:"emotion"},
+  {id:"e04", kanji:"喜び",   furigana:"よろこび",     english:"joy / delight",         category:"emotion"},
+  {id:"e05", kanji:"悲しみ", furigana:"かなしみ",     english:"sadness / sorrow",      category:"emotion"},
+  {id:"e06", kanji:"怒り",   furigana:"いかり",       english:"anger",                 category:"emotion"},
+  {id:"e07", kanji:"驚き",   furigana:"おどろき",     english:"surprise / astonishment",category:"emotion"},
+  {id:"e08", kanji:"後悔",   furigana:"こうかい",     english:"regret",                category:"emotion"},
+  {id:"e09", kanji:"満足",   furigana:"まんぞく",     english:"satisfaction",          category:"emotion"},
+  {id:"e10", kanji:"失望",   furigana:"しつぼう",     english:"disappointment",        category:"emotion"},
+  {id:"e11", kanji:"希望",   furigana:"きぼう",       english:"hope",                  category:"emotion"},
+  {id:"e12", kanji:"恐怖",   furigana:"きょうふ",     english:"fear / terror",         category:"emotion"},
+  {id:"e13", kanji:"興奮",   furigana:"こうふん",     english:"excitement",            category:"emotion"},
+  {id:"e14", kanji:"感謝",   furigana:"かんしゃ",     english:"gratitude / thanks",    category:"emotion"},
+  {id:"e15", kanji:"憧れ",   furigana:"あこがれ",     english:"longing / admiration",  category:"emotion"},
+  // ─── HEALTH ───────────────────────────────────────────
+  {id:"h01", kanji:"症状",   furigana:"しょうじょう", english:"symptom",               category:"health"},
+  {id:"h02", kanji:"治療",   furigana:"ちりょう",     english:"treatment / therapy",   category:"health"},
+  {id:"h03", kanji:"手術",   furigana:"しゅじゅつ",   english:"surgery / operation",   category:"health"},
+  {id:"h04", kanji:"診断",   furigana:"しんだん",     english:"diagnosis",             category:"health"},
+  {id:"h05", kanji:"栄養",   furigana:"えいよう",     english:"nutrition / nourishment",category:"health"},
+  {id:"h06", kanji:"睡眠",   furigana:"すいみん",     english:"sleep",                 category:"health"},
+  {id:"h07", kanji:"免疫",   furigana:"めんえき",     english:"immunity",              category:"health"},
+  {id:"h08", kanji:"体力",   furigana:"たいりょく",   english:"physical strength",     category:"health"},
+  {id:"h09", kanji:"回復",   furigana:"かいふく",     english:"recovery",              category:"health"},
+  {id:"h10", kanji:"予防",   furigana:"よぼう",       english:"prevention",            category:"health"},
+  {id:"h11", kanji:"傷",     furigana:"きず",         english:"wound / injury / scar", category:"health"},
+  {id:"h12", kanji:"検査",   furigana:"けんさ",       english:"examination / test",    category:"health"},
+  // ─── KNOWLEDGE ────────────────────────────────────────
+  {id:"k01", kanji:"研究",   furigana:"けんきゅう",   english:"research / study",      category:"knowledge"},
+  {id:"k02", kanji:"調査",   furigana:"ちょうさ",     english:"investigation / survey", category:"knowledge"},
+  {id:"k03", kanji:"理論",   furigana:"りろん",       english:"theory",                category:"knowledge"},
+  {id:"k04", kanji:"実験",   furigana:"じっけん",     english:"experiment",            category:"knowledge"},
+  {id:"k05", kanji:"証明",   furigana:"しょうめい",   english:"proof / verification",  category:"knowledge"},
+  {id:"k06", kanji:"記憶",   furigana:"きおく",       english:"memory",                category:"knowledge"},
+  {id:"k07", kanji:"知識",   furigana:"ちしき",       english:"knowledge",             category:"knowledge"},
+  {id:"k08", kanji:"教育",   furigana:"きょういく",   english:"education",             category:"knowledge"},
+  {id:"k09", kanji:"資料",   furigana:"しりょう",     english:"material / data",       category:"knowledge"},
+  {id:"k10", kanji:"報告",   furigana:"ほうこく",     english:"report",                category:"knowledge"},
+  {id:"k11", kanji:"分析",   furigana:"ぶんせき",     english:"analysis",              category:"knowledge"},
+  {id:"k12", kanji:"評価",   furigana:"ひょうか",     english:"evaluation / assessment",category:"knowledge"},
+  // ─── COMMUNICATION ────────────────────────────────────
+  {id:"c01", kanji:"議論",   furigana:"ぎろん",       english:"argument / discussion", category:"communication"},
+  {id:"c02", kanji:"交渉",   furigana:"こうしょう",   english:"negotiation",           category:"communication"},
+  {id:"c03", kanji:"批判",   furigana:"ひはん",       english:"criticism",             category:"communication"},
+  {id:"c04", kanji:"主張",   furigana:"しゅちょう",   english:"claim / assertion",     category:"communication"},
+  {id:"c05", kanji:"説明",   furigana:"せつめい",     english:"explanation",           category:"communication"},
+  {id:"c06", kanji:"相談",   furigana:"そうだん",     english:"consultation / advice", category:"communication"},
+  {id:"c07", kanji:"発表",   furigana:"はっぴょう",   english:"announcement / presentation",category:"communication"},
+  {id:"c08", kanji:"提案",   furigana:"ていあん",     english:"proposal / suggestion", category:"communication"},
+  {id:"c09", kanji:"意見",   furigana:"いけん",       english:"opinion / view",        category:"communication"},
+  {id:"c10", kanji:"賛成",   furigana:"さんせい",     english:"agreement / approval",  category:"communication"},
+  {id:"c11", kanji:"反対",   furigana:"はんたい",     english:"opposition / objection",category:"communication"},
+  {id:"c12", kanji:"誤解",   furigana:"ごかい",       english:"misunderstanding",      category:"communication"},
+  // ─── ADJECTIVES ───────────────────────────────────────
+  {id:"a01", kanji:"複雑",       furigana:"ふくざつ",   english:"complicated / complex",  category:"adjectives"},
+  {id:"a02", kanji:"曖昧",       furigana:"あいまい",   english:"ambiguous / vague",      category:"adjectives"},
+  {id:"a03", kanji:"厳しい",     furigana:"きびしい",   english:"strict / severe / harsh",category:"adjectives"},
+  {id:"a04", kanji:"穏やか",     furigana:"おだやか",   english:"calm / gentle",          category:"adjectives"},
+  {id:"a05", kanji:"丁寧",       furigana:"ていねい",   english:"polite / careful",       category:"adjectives"},
+  {id:"a06", kanji:"素直",       furigana:"すなお",     english:"honest / obedient",      category:"adjectives"},
+  {id:"a07", kanji:"貧しい",     furigana:"まずしい",   english:"poor / needy",           category:"adjectives"},
+  {id:"a08", kanji:"豊か",       furigana:"ゆたか",     english:"abundant / rich",        category:"adjectives"},
+  {id:"a09", kanji:"鋭い",       furigana:"するどい",   english:"sharp / keen / acute",   category:"adjectives"},
+  {id:"a10", kanji:"鈍い",       furigana:"にぶい",     english:"dull / slow / blunt",    category:"adjectives"},
+  {id:"a11", kanji:"惜しい",     furigana:"おしい",     english:"regrettable / too good to waste",category:"adjectives"},
+  {id:"a12", kanji:"恥ずかしい", furigana:"はずかしい", english:"embarrassing / shameful",category:"adjectives"},
+  {id:"a13", kanji:"懐かしい",   furigana:"なつかしい", english:"nostalgic / fondly remembered",category:"adjectives"},
+  {id:"a14", kanji:"悔しい",     furigana:"くやしい",   english:"frustrating / vexing",   category:"adjectives"},
+  // ─── VERBS ────────────────────────────────────────────
+  {id:"v01", kanji:"諦める",   furigana:"あきらめる",   english:"to give up / abandon",    category:"verbs"},
+  {id:"v02", kanji:"溢れる",   furigana:"あふれる",     english:"to overflow / brim over", category:"verbs"},
+  {id:"v03", kanji:"妨げる",   furigana:"さまたげる",   english:"to hinder / obstruct",    category:"verbs"},
+  {id:"v04", kanji:"踏まえる", furigana:"ふまえる",     english:"to be based on / take into account",category:"verbs"},
+  {id:"v05", kanji:"見直す",   furigana:"みなおす",     english:"to reconsider / review",  category:"verbs"},
+  {id:"v06", kanji:"引き受ける",furigana:"ひきうける",  english:"to take on / accept",     category:"verbs"},
+  {id:"v07", kanji:"取り組む", furigana:"とりくむ",     english:"to tackle / work on",     category:"verbs"},
+  {id:"v08", kanji:"見逃す",   furigana:"みのがす",     english:"to overlook / miss",      category:"verbs"},
+  {id:"v09", kanji:"打ち明ける",furigana:"うちあける",  english:"to confide / reveal",     category:"verbs"},
+  {id:"v10", kanji:"思い込む", furigana:"おもいこむ",   english:"to be convinced / assume",category:"verbs"},
+  {id:"v11", kanji:"省く",     furigana:"はぶく",       english:"to omit / skip / save",   category:"verbs"},
+  {id:"v12", kanji:"遂げる",   furigana:"とげる",       english:"to accomplish / achieve", category:"verbs"},
+  {id:"v13", kanji:"免れる",   furigana:"まぬかれる",   english:"to escape / avoid",       category:"verbs"},
+  {id:"v14", kanji:"惜しむ",   furigana:"おしむ",       english:"to regret losing / be reluctant",category:"verbs"},
+  {id:"v15", kanji:"訴える",   furigana:"うったえる",   english:"to appeal / sue / complain",category:"verbs"},
+  {id:"v16", kanji:"恵まれる", furigana:"めぐまれる",   english:"to be blessed with",      category:"verbs"},
+  {id:"v17", kanji:"見込む",   furigana:"みこむ",       english:"to anticipate / count on",category:"verbs"},
+  {id:"v18", kanji:"手掛ける", furigana:"てがける",     english:"to handle / work on",     category:"verbs"},
+  // ─── ADVERBS & EXPRESSIONS ────────────────────────────
+  {id:"d01", kanji:"一向に",   furigana:"いっこうに",   english:"(not) at all / utterly",  category:"adverbs"},
+  {id:"d02", kanji:"いまさら", furigana:"いまさら",     english:"too late now / at this point",category:"adverbs"},
+  {id:"d03", kanji:"次第に",   furigana:"しだいに",     english:"gradually / little by little",category:"adverbs"},
+  {id:"d04", kanji:"必ずしも", furigana:"かならずしも", english:"not necessarily / not always",category:"adverbs"},
+  {id:"d05", kanji:"かえって", furigana:"かえって",     english:"on the contrary / rather", category:"adverbs"},
+  {id:"d06", kanji:"あえて",   furigana:"あえて",       english:"dare to / deliberately",  category:"adverbs"},
+  {id:"d07", kanji:"せっかく", furigana:"せっかく",     english:"taking the trouble to / specially",category:"adverbs"},
+  {id:"d08", kanji:"ようやく", furigana:"ようやく",     english:"finally / at last / barely",category:"adverbs"},
+  {id:"d09", kanji:"むしろ",   furigana:"むしろ",       english:"rather / instead / if anything",category:"adverbs"},
+  {id:"d10", kanji:"もはや",   furigana:"もはや",       english:"already / no longer",     category:"adverbs"},
+  {id:"d11", kanji:"あらかじめ",furigana:"あらかじめ",  english:"in advance / beforehand", category:"adverbs"},
+  {id:"d12", kanji:"あいにく", furigana:"あいにく",     english:"unfortunately / as bad luck would have it",category:"adverbs"},
+  // ─── KATAKANA ─────────────────────────────────────────
+  {id:"t01", kanji:"コミュニケーション",furigana:"こみゅにけーしょん",english:"communication",   category:"katakana"},
+  {id:"t02", kanji:"グローバル",       furigana:"ぐろーばる",        english:"global",           category:"katakana"},
+  {id:"t03", kanji:"システム",         furigana:"しすてむ",          english:"system",           category:"katakana"},
+  {id:"t04", kanji:"リスク",           furigana:"りすく",            english:"risk",             category:"katakana"},
+  {id:"t05", kanji:"サービス",         furigana:"さーびす",          english:"service",          category:"katakana"},
+  {id:"t06", kanji:"イメージ",         furigana:"いめーじ",          english:"image / impression",category:"katakana"},
+  {id:"t07", kanji:"データ",           furigana:"でーた",            english:"data",             category:"katakana"},
+  {id:"t08", kanji:"ネットワーク",     furigana:"ねっとわーく",      english:"network",          category:"katakana"},
+  {id:"t09", kanji:"プロジェクト",     furigana:"ぷろじぇくと",      english:"project",          category:"katakana"},
+  {id:"t10", kanji:"メリット",         furigana:"めりっと",          english:"merit / advantage",category:"katakana"},
+  {id:"t11", kanji:"デメリット",       furigana:"でめりっと",        english:"demerit / disadvantage",category:"katakana"},
+  {id:"t12", kanji:"ストレス",         furigana:"すとれす",          english:"stress",           category:"katakana"},
+];
+
+// ══════════════════════════════════════════════════════════
+//  SPACED REPETITION (SM-2)
+// ══════════════════════════════════════════════════════════
+const SRS_PREFIX = "n2srs_";
+const SETTINGS_KEY = "n2srs_settings";
+
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getCardData(id) {
+  const raw = localStorage.getItem(SRS_PREFIX + id);
+  if (!raw) return { rep:0, ef:2.5, interval:1, nextReview:today(), lastReview:null };
+  return JSON.parse(raw);
+}
+
+function saveCardData(id, data) {
+  localStorage.setItem(SRS_PREFIX + id, JSON.stringify(data));
+}
+
+function isDue(id) {
+  const d = getCardData(id);
+  return d.nextReview <= today();
+}
+
+function isMastered(id) {
+  const d = getCardData(id);
+  return d.rep >= 3 && d.ef >= 2.0;
+}
+
+function calcNextInterval(data, quality) {
+  if (quality < 3) return 1;
+  if (data.rep === 0) return 1;
+  if (data.rep === 1) return 6;
+  const ef = Math.max(1.3, data.ef + 0.1 - (5-quality)*(0.08 + (5-quality)*0.02));
+  return Math.round(data.interval * ef);
+}
+
+function intervalHint(id, quality) {
+  const data = getCardData(id);
+  const iv = calcNextInterval(data, quality);
+  if (iv <= 1) return "tomorrow";
+  if (iv < 7) return `${iv}d`;
+  if (iv < 30) return `${Math.ceil(iv/7)}w`;
+  return `${Math.round(iv/30)}mo`;
+}
+
+function updateCard(id, quality) {
+  const data = getCardData(id);
+  const iv = calcNextInterval(data, quality);
+  if (quality >= 3) {
+    data.rep++;
+    data.ef = Math.max(1.3, data.ef + 0.1 - (5-quality)*(0.08 + (5-quality)*0.02));
+  } else {
+    data.rep = 0;
+    data.ef = Math.max(1.3, data.ef - 0.2);
+  }
+  data.interval = iv;
+  const next = new Date();
+  next.setDate(next.getDate() + iv);
+  data.nextReview = next.toISOString().split("T")[0];
+  data.lastReview = today();
+  saveCardData(id, data);
+}
+
+function getStats() {
+  let due = 0, mastered = 0;
+  VOCAB.forEach(w => {
+    if (isDue(w.id)) due++;
+    if (isMastered(w.id)) mastered++;
+  });
+  return { total: VOCAB.length, due, mastered };
+}
+
+function getDueForCategories(cats) {
+  return VOCAB.filter(w => cats.includes(w.category) && isDue(w.id));
+}
+
+function getAllForCategories(cats) {
+  return VOCAB.filter(w => cats.includes(w.category));
+}
+
+function getDueCountForCat(cat) {
+  return VOCAB.filter(w => w.category === cat && isDue(w.id)).length;
+}
+
+// ══════════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════════
+function loadSettings() {
+  const raw = localStorage.getItem(SETTINGS_KEY);
+  if (!raw) return { mode:"reading", selectedCats: Object.keys(CATEGORIES) };
+  try { return JSON.parse(raw); }
+  catch(e) { return { mode:"reading", selectedCats: Object.keys(CATEGORIES) }; }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+// ══════════════════════════════════════════════════════════
+//  SESSION STATE
+// ══════════════════════════════════════════════════════════
+let session = {
+  cards: [],          // array of vocab objects
+  queue: [],          // remaining card indices (with possible repeats)
+  currentIndex: 0,
+  mode: "reading",
+  correct: 0,
+  again: 0,
+  total: 0,
+  againIds: new Set(),
+  startTime: null,
+};
+
+let settings = loadSettings();
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ══════════════════════════════════════════════════════════
+//  UI: HOME SCREEN
+// ══════════════════════════════════════════════════════════
+function renderHome() {
+  const stats = getStats();
+  document.getElementById("stat-total").textContent = stats.total;
+  document.getElementById("stat-due").textContent = stats.due;
+  document.getElementById("stat-mastered").textContent = stats.mastered;
+
+  // Streak (days studied)
+  const streakEl = document.getElementById("streak-area");
+  const streak = getStreak();
+  if (streak > 0) {
+    streakEl.innerHTML = `<div class="streak-badge">🔥 ${streak} day streak</div>`;
+  } else {
+    streakEl.innerHTML = "";
+  }
+
+  // Mode buttons
+  document.querySelectorAll(".mode-chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === settings.mode);
+  });
+
+  // Category grid
+  const grid = document.getElementById("cat-grid");
+  grid.innerHTML = "";
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    const total = VOCAB.filter(w => w.category === key).length;
+    const due = getDueCountForCat(key);
+    const selected = settings.selectedCats.includes(key);
+    const card = document.createElement("div");
+    card.className = "cat-card" + (selected ? " selected" : "");
+    card.style.setProperty("--cc", cat.color);
+    card.innerHTML = `
+      <span class="cat-check">✓</span>
+      <span class="cat-emoji">${cat.emoji}</span>
+      <div class="cat-name">${cat.name}</div>
+      <div class="cat-count">${total} cards</div>
+      ${due > 0 ? `<div class="cat-due-badge">${due}</div>` : `<div class="cat-due-badge hidden"></div>`}
+    `;
+    card.addEventListener("click", () => toggleCat(key, card, cat.color));
+    grid.appendChild(card);
+  });
+
+  updateCatLabel();
+}
+
+function toggleCat(key, card, color) {
+  const idx = settings.selectedCats.indexOf(key);
+  if (idx >= 0) {
+    if (settings.selectedCats.length === 1) return; // keep at least one
+    settings.selectedCats.splice(idx, 1);
+    card.classList.remove("selected");
+  } else {
+    settings.selectedCats.push(key);
+    card.classList.add("selected");
+  }
+  saveSettings(settings);
+  updateCatLabel();
+}
+
+function updateCatLabel() {
+  const all = Object.keys(CATEGORIES).length;
+  const sel = settings.selectedCats.length;
+  const lbl = document.getElementById("cat-sel-label");
+  lbl.textContent = sel === all ? "(all selected)" : `(${sel}/${all} selected)`;
+}
+
+function getStreak() {
+  const key = "n2srs_streak";
+  const raw = localStorage.getItem(key);
+  if (!raw) return 0;
+  const { count, lastDate } = JSON.parse(raw);
+  const td = today();
+  const yd = new Date(); yd.setDate(yd.getDate()-1);
+  const yesterday = yd.toISOString().split("T")[0];
+  if (lastDate === td || lastDate === yesterday) return count;
+  return 0;
+}
+
+function updateStreak() {
+  const key = "n2srs_streak";
+  const raw = localStorage.getItem(key);
+  const td = today();
+  let count = 1;
+  if (raw) {
+    const { count:c, lastDate } = JSON.parse(raw);
+    const yd = new Date(); yd.setDate(yd.getDate()-1);
+    const yesterday = yd.toISOString().split("T")[0];
+    if (lastDate === td) return;
+    if (lastDate === yesterday) count = c+1;
+  }
+  localStorage.setItem(key, JSON.stringify({count, lastDate:td}));
+}
+
+// ══════════════════════════════════════════════════════════
+//  UI: STUDY SCREEN
+// ══════════════════════════════════════════════════════════
+function startStudy(dueOnly) {
+  const cats = settings.selectedCats;
+  let words = dueOnly ? getDueForCategories(cats) : getAllForCategories(cats);
+
+  if (words.length === 0) {
+    const box = document.createElement("div");
+    box.className = "no-due-box";
+    box.innerHTML = `
+      <div class="ndicon">🌟</div>
+      <h3>All caught up!</h3>
+      <p>No cards are due for the selected categories today.<br>
+      Click <strong>Study All</strong> to review anyway, or come back tomorrow!</p>
+    `;
+    const existing = document.querySelector(".no-due-box");
+    if (existing) existing.remove();
+    document.getElementById("screen-home").insertBefore(box, document.querySelector(".start-area"));
+    return;
+  }
+
+  session.cards = shuffle(words);
+  session.queue = session.cards.map((_, i) => i);
+  session.currentIndex = 0;
+  session.mode = settings.mode;
+  session.correct = 0;
+  session.again = 0;
+  session.total = session.cards.length;
+  session.againIds = new Set();
+  session.startTime = Date.now();
+
+  updateStreak();
+  showScreen("screen-study");
+  renderStudyCard();
+}
+
+function renderStudyCard() {
+  const qi = session.queue[session.currentIndex];
+  const word = session.cards[qi];
+  const mode = session.mode;
+  const cat = CATEGORIES[word.category];
+  const catColor = cat.color;
+
+  // Progress
+  const prog = session.currentIndex / session.queue.length;
+  document.getElementById("progress-fill").style.width = (prog*100) + "%";
+  document.getElementById("progress-text").textContent =
+    `Card ${session.currentIndex+1} / ${session.queue.length}`;
+
+  const modeLabels = { reading:"📖 Reading", jp_en:"🇯🇵 JP→EN", en_jp:"🇬🇧 EN→JP" };
+  document.getElementById("study-mode-label").textContent = modeLabels[mode];
+
+  // Build card content
+  const front = document.getElementById("card-front");
+  const back  = document.getElementById("card-back");
+  const catTag = `<span class="card-cat-label" style="--cc:${catColor}">${cat.emoji} ${cat.name}</span>`;
+
+  if (mode === "reading") {
+    front.innerHTML = `${catTag}
+      <div class="card-main-jp">${word.kanji}</div>
+      <div class="card-hint">読み方は？</div>
+      <div class="card-tap-hint">tap to flip</div>`;
+    back.innerHTML = `${catTag}
+      <div class="card-back-furi">${word.furigana}</div>
+      <div class="card-back-kanji" style="font-size:2.2rem">${word.kanji}</div>
+      <div class="card-sub-line">${word.english}</div>`;
+  } else if (mode === "jp_en") {
+    front.innerHTML = `${catTag}
+      <div class="card-furi">${word.furigana}</div>
+      <div class="card-main-jp">${word.kanji}</div>
+      <div class="card-hint">意味は？</div>
+      <div class="card-tap-hint">tap to flip</div>`;
+    back.innerHTML = `${catTag}
+      <div class="card-back-en">${word.english}</div>
+      <div class="card-sub-line" style="font-family:'Noto Sans JP',sans-serif">${word.kanji} · ${word.furigana}</div>`;
+  } else { // en_jp
+    front.innerHTML = `${catTag}
+      <div class="card-main-en">${word.english}</div>
+      <div class="card-hint">日本語で？</div>
+      <div class="card-tap-hint">tap to flip</div>`;
+    back.innerHTML = `${catTag}
+      <div class="card-back-furi">${word.furigana}</div>
+      <div class="card-back-kanji">${word.kanji}</div>`;
+  }
+
+  // Interval hints
+  document.getElementById("hint-again").textContent = intervalHint(word.id, 0);
+  document.getElementById("hint-hard").textContent  = intervalHint(word.id, 3);
+  document.getElementById("hint-good").textContent  = intervalHint(word.id, 4);
+  document.getElementById("hint-easy").textContent  = intervalHint(word.id, 5);
+
+  // Reset card state
+  document.getElementById("card-inner").classList.remove("flipped");
+  document.getElementById("reveal-btn").style.display = "";
+  document.getElementById("rating-area").classList.remove("visible");
+
+  // Set card top-bar color
+  document.getElementById("card-front").style.setProperty("--cc", catColor);
+  document.getElementById("card-back").style.setProperty("--cc", catColor);
+}
+
+function cardClicked() {
+  const inner = document.getElementById("card-inner");
+  if (!inner.classList.contains("flipped")) {
+    revealCard();
+  }
+}
+
+function revealCard() {
+  document.getElementById("card-inner").classList.add("flipped");
+  document.getElementById("reveal-btn").style.display = "none";
+  document.getElementById("rating-area").classList.add("visible");
+}
+
+function rateCard(quality) {
+  const qi = session.queue[session.currentIndex];
+  const word = session.cards[qi];
+
+  updateCard(word.id, quality);
+
+  if (quality >= 3) {
+    session.correct++;
+  } else {
+    session.again++;
+    // Re-queue this card at a random later position (not immediately)
+    if (!session.againIds.has(word.id)) {
+      session.againIds.add(word.id);
+      const insertAt = Math.min(
+        session.queue.length,
+        session.currentIndex + 2 + Math.floor(Math.random() * 3)
+      );
+      session.queue.splice(insertAt, 0, qi);
+    }
+  }
+
+  session.currentIndex++;
+
+  if (session.currentIndex >= session.queue.length) {
+    showComplete();
+  } else {
+    renderStudyCard();
+  }
+}
+
+function restartSession() {
+  session.currentIndex = 0;
+  session.queue = shuffle(session.cards.map((_,i) => i));
+  session.correct = 0;
+  session.again = 0;
+  session.againIds = new Set();
+  session.startTime = Date.now();
+  showScreen("screen-study");
+  renderStudyCard();
+}
+
+// ══════════════════════════════════════════════════════════
+//  UI: COMPLETE SCREEN
+// ══════════════════════════════════════════════════════════
+function showComplete() {
+  const pct = Math.round((session.correct / session.total) * 100);
+  const elapsed = Math.round((Date.now() - session.startTime) / 1000);
+  const mins = Math.floor(elapsed/60), secs = elapsed%60;
+  const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+  let emoji = "🌸", title = "Keep going!", sub = "Practice makes perfect!";
+  if (pct === 100) { emoji = "🎊"; title = "Perfect Score!"; sub = "Absolutely brilliant! 花まる！"; }
+  else if (pct >= 80) { emoji = "⭐"; title = "Great job!"; sub = "You're on a roll!"; }
+  else if (pct >= 60) { emoji = "💪"; title = "Nice work!"; sub = "Getting stronger every session!"; }
+
+  document.getElementById("complete-emoji").textContent = emoji;
+  document.getElementById("complete-title").textContent = title;
+  document.getElementById("complete-sub").textContent = sub;
+
+  document.getElementById("complete-stats").innerHTML = `
+    <div class="cstat"><div class="cn">${session.total}</div><div class="cl">Cards</div></div>
+    <div class="cstat cpink"><div class="cn">${pct}%</div><div class="cl">Correct</div></div>
+    <div class="cstat cmint"><div class="cn">${timeStr}</div><div class="cl">Time</div></div>
+  `;
+
+  showScreen("screen-complete");
+  if (pct >= 80) spawnConfetti();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SCREEN NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function showHome() {
+  renderHome();
+  showScreen("screen-home");
+  const ndb = document.querySelector(".no-due-box");
+  if (ndb) ndb.remove();
+}
+
+// ══════════════════════════════════════════════════════════
+//  DECORATIVE EFFECTS
+// ══════════════════════════════════════════════════════════
+function spawnPetals() {
+  const petals = ["🌸","🌷","✿","❀","🌺","⋆","✦"];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement("div");
+    p.className = "petal";
+    p.textContent = petals[Math.floor(Math.random()*petals.length)];
+    p.style.left = Math.random()*100 + "vw";
+    p.style.animationDuration = (8 + Math.random()*12) + "s";
+    p.style.animationDelay = (Math.random()*15) + "s";
+    p.style.fontSize = (0.7 + Math.random()*0.8) + "rem";
+    document.body.appendChild(p);
+  }
+}
+
+function spawnConfetti() {
+  const confettis = ["🌸","⭐","✨","💖","🎉","🌟","💫","🎊"];
+  for (let i = 0; i < 18; i++) {
+    setTimeout(() => {
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.textContent = confettis[Math.floor(Math.random()*confettis.length)];
+      c.style.left = (10 + Math.random()*80) + "vw";
+      c.style.top = (10 + Math.random()*40) + "vh";
+      c.style.fontSize = (1 + Math.random()) + "rem";
+      c.style.animationDuration = (1 + Math.random()*0.8) + "s";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 2500);
+    }, i * 80);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll(".mode-chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    settings.mode = btn.dataset.mode;
+    saveSettings(settings);
+    document.querySelectorAll(".mode-chip").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
+
+document.getElementById("btn-start").addEventListener("click", () => startStudy(true));
+document.getElementById("btn-start-all").addEventListener("click", () => startStudy(false));
+document.getElementById("btn-back").addEventListener("click", showHome);
+
+// Keyboard shortcuts in study mode
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("screen-study").classList.contains("active")) return;
+  const revealed = document.getElementById("card-inner").classList.contains("flipped");
+  if (!revealed) {
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); revealCard(); }
+  } else {
+    if (e.key === "1") rateCard(0);
+    if (e.key === "2") rateCard(3);
+    if (e.key === "3") rateCard(4);
+    if (e.key === "4") rateCard(5);
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+spawnPetals();
+renderHome();
+</script>
+</body>
+</html>
